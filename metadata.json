@@ -1,0 +1,5 @@
+{
+  "name": "Anime Dub Agent",
+  "description": "An application to dynamically dub anime video segments using real-time voice synthesis, featuring a queue system and voice pack management.",
+  "requestFramePermissions": []
+}
