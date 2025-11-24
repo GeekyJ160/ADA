@@ -1,50 +1,55 @@
 
 import React from 'react';
-import { Pack, PackStatus } from '../types';
 
-interface PackCardProps {
-  pack: Pack;
-  onToggle: (packId: string) => void;
+interface ScriptInputProps {
+  script: string;
+  onScriptChange: (val: string) => void;
 }
 
-const PackCard: React.FC<PackCardProps> = ({ pack, onToggle }) => {
-  const isLive = pack.status === 'on';
+const ScriptInput: React.FC<ScriptInputProps> = ({ script, onScriptChange }) => {
+  const handleSample = () => {
+    onScriptChange(
+      "The hero stands on the edge of the cliff.\nThe wind howls around him.\n'I will never give up!', he shouts into the void."
+    );
+  };
 
   return (
-    <div 
-      onClick={() => onToggle(pack.id)}
-      className="p-4 bg-gray-800/50 rounded-xl text-center shadow-lg transition-all duration-300 ease-in-out cursor-pointer hover:-translate-y-1 hover:shadow-sky-500/20"
-    >
-      <div className="w-10 h-10 rounded-full bg-sky-500 mx-auto mb-2 flex items-center justify-center font-bold text-lg">
-        {pack.avatar}
+    <section className="p-4 bg-[#1a1a2e] rounded-2xl border border-gray-700/50 shadow-lg">
+      <div className="flex justify-between items-center border-b border-gray-700/50 pb-2 mb-3">
+        <h2 className="text-lg font-semibold text-sky-300">📝 Script & Subtitles</h2>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => onScriptChange('')}
+            className="text-xs text-gray-400 hover:text-white px-2 py-1 rounded bg-gray-800 transition-colors"
+          >
+            Clear
+          </button>
+          <button 
+            onClick={handleSample}
+            className="text-xs text-sky-400 hover:text-sky-300 px-2 py-1 rounded bg-sky-900/30 transition-colors border border-sky-900"
+          >
+            Sample
+          </button>
+        </div>
       </div>
-      <div className="font-semibold text-sm">{pack.name}</div>
-      <div className="text-xs text-gray-400 mt-1 flex items-center justify-center">
-        Status: 
-        <span className={`inline-block w-2.5 h-2.5 rounded-full ml-2 ${isLive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
-        <span className="ml-1">{isLive ? 'On' : 'Off'}</span>
+      
+      <div className="relative group">
+        <textarea
+          value={script}
+          onChange={(e) => onScriptChange(e.target.value)}
+          placeholder="Enter subtitles or text here to generate voice-overs..."
+          className="w-full h-32 bg-black/40 text-gray-200 p-3 rounded-xl border border-gray-700 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none resize-none text-sm leading-relaxed transition-all"
+          spellCheck={false}
+        />
+        <div className="absolute bottom-3 right-3 text-xs text-gray-500 pointer-events-none">
+          {script.length} chars
+        </div>
       </div>
-    </div>
-  );
-};
-
-
-interface QueueAndPacksProps {
-  packs: Pack[];
-  onTogglePack: (packId: string) => void;
-}
-
-const QueueAndPacks: React.FC<QueueAndPacksProps> = ({ packs, onTogglePack }) => {
-  return (
-    <section className="p-4 bg-[#1a1a2e] rounded-2xl border border-gray-700/50">
-      <h2 className="text-lg font-semibold text-sky-300 border-b border-gray-700/50 pb-2 mb-4">🎛️ Queue & Packs</h2>
-      <div className="grid grid-cols-3 gap-3">
-        {packs.map(pack => (
-          <PackCard key={pack.id} pack={pack} onToggle={onTogglePack} />
-        ))}
-      </div>
+      <p className="text-xs text-gray-500 mt-2 italic">
+        Tip: Use new lines to separate subtitle segments.
+      </p>
     </section>
   );
 };
 
-export default QueueAndPacks;
+export default ScriptInput;

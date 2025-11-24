@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useMemo } from 'react';
 
 interface DubbingControlsProps {
   onStart: () => void;
@@ -7,9 +8,24 @@ interface DubbingControlsProps {
   voices: SpeechSynthesisVoice[];
   selectedVoiceURI: string | null;
   onVoiceChange: (uri: string) => void;
-  voiceLoadingError: string | null;
+  targetLang: string;
+  onTargetLangChange: (lang: string) => void;
   areVoicesLoading: boolean;
 }
+
+const LANGUAGES = [
+  { code: 'original', name: 'Original (No Translation)' },
+  { code: 'Spanish', name: 'Spanish 🇪🇸' },
+  { code: 'French', name: 'French 🇫🇷' },
+  { code: 'Japanese', name: 'Japanese 🇯🇵' },
+  { code: 'German', name: 'German 🇩🇪' },
+  { code: 'Chinese', name: 'Chinese 🇨🇳' },
+  { code: 'Korean', name: 'Korean 🇰🇷' },
+  { code: 'Italian', name: 'Italian 🇮🇹' },
+  { code: 'Russian', name: 'Russian 🇷🇺' },
+  { code: 'Hindi', name: 'Hindi 🇮🇳' },
+  { code: 'Arabic', name: 'Arabic 🇸🇦' },
+];
 
 const DubbingControls: React.FC<DubbingControlsProps> = ({
   onStart,
@@ -18,105 +34,91 @@ const DubbingControls: React.FC<DubbingControlsProps> = ({
   voices,
   selectedVoiceURI,
   onVoiceChange,
-  voiceLoadingError,
+  targetLang,
+  onTargetLangChange,
   areVoicesLoading,
 }) => {
-  const handleButtonClick = () => {
-    if (isDubbingActive) {
-      onStop();
-    } else {
-      onStart();
-    }
-  };
-
-  const renderVoiceOptions = () => {
-    if (voiceLoadingError) {
-      return <option disabled>{voiceLoadingError}</option>;
-    }
-    if (areVoicesLoading) {
-      return <option disabled>Loading voices...</option>;
-    }
-    if (voices.length === 0) {
-      return <option disabled>No voices available</option>;
-    }
+  
+  const voiceOptions = useMemo(() => {
+    if (areVoicesLoading) return <option disabled>Loading voices...</option>;
+    if (voices.length === 0) return <option disabled>No voices available</option>;
     
-    // Group voices by language for better organization
     const groupedVoices = voices.reduce((acc, voice) => {
-      const lang = voice.lang;
-      if (!acc[lang]) {
-        acc[lang] = [];
-      }
-      acc[lang].push(voice);
+      const baseLang = voice.lang.split('-')[0];
+      if (!acc[baseLang]) acc[baseLang] = [];
+      acc[baseLang].push(voice);
       return acc;
     }, {} as Record<string, SpeechSynthesisVoice[]>);
 
     const languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
 
-    return Object.keys(groupedVoices).sort().map(lang => {
-      let languageLabel = lang;
+    return Object.keys(groupedVoices).sort().map(baseLang => {
+      let languageLabel = baseLang;
       try {
-        // Use full language name if possible, fallback to lang code
-        const mainLangCode = lang.split('-')[0];
-        // Fix: The method to get a display name from Intl.DisplayNames is `of()`, not `getDisplayName()`.
-        const displayName = languageNames.of(mainLangCode);
-        if (displayName) {
-          languageLabel = `${displayName} (${lang})`;
-        }
-      } catch (e) {
-        // Intl.DisplayNames might not support all lang codes, fallback to lang code
-        console.warn(`Could not get display name for language code: ${lang}`);
-      }
+        const name = languageNames.of(baseLang);
+        if (name) languageLabel = name;
+      } catch (e) {}
+      
       return (
-        <optgroup label={languageLabel} key={lang}>
-          {groupedVoices[lang].map(voice => (
+        <optgroup label={languageLabel} key={baseLang}>
+          {groupedVoices[baseLang].map(voice => (
             <option key={voice.voiceURI} value={voice.voiceURI}>
-              {voice.name}
+              {voice.name.replace('Google', '').replace('Microsoft', '').trim()} ({voice.lang})
             </option>
           ))}
         </optgroup>
       );
     });
-  };
-  
-  const isVoiceSelectionDisabled = areVoicesLoading || !!voiceLoadingError || voices.length === 0;
-  // Make disabling start button more explicit: disable if dubbing is not active AND (voice selection is disabled or no voice is selected)
-  const isStartButtonDisabled = !isDubbingActive && (isVoiceSelectionDisabled || !selectedVoiceURI);
+  }, [voices, areVoicesLoading]);
 
   return (
-    <section className="p-4 bg-[#1a1a2e] rounded-2xl border border-gray-700/50 space-y-4">
-      <h2 className="text-lg font-semibold text-sky-300 border-b border-gray-700/50 pb-2">🔴 Live Dubbing</h2>
+    <section className="p-4 bg-[#1a1a2e] rounded-2xl border border-gray-700/50 space-y-4 shadow-lg">
+      <h2 className="text-lg font-semibold text-sky-300 border-b border-gray-700/50 pb-2">🎚️ Dubbing Studio</h2>
       
-      <div className="space-y-3">
-        <div>
-          <label htmlFor="language" className="text-sm font-medium text-gray-300 mb-1 block">Language</label>
-          <select id="language" className="w-full bg-gray-800/50 border border-gray-600/50 p-3 rounded-lg text-sm focus:ring-sky-500 focus:border-sky-500">
-            <option>English</option>
-            <option>Spanish</option>
-            <option>French</option>
-            <option>Japanese</option>
+      <div className="grid grid-cols-1 gap-4">
+         {/* Translation Selector */}
+         <div className="bg-black/20 p-3 rounded-lg border border-gray-700/30">
+          <label className="text-xs font-bold text-sky-500 uppercase mb-2 block tracking-wider">1. Translate To</label>
+          <select 
+            className="w-full bg-gray-800 text-white p-2.5 rounded-md text-sm border border-gray-600 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none"
+            value={targetLang}
+            onChange={(e) => onTargetLangChange(e.target.value)}
+            disabled={isDubbingActive}
+          >
+            {LANGUAGES.map(lang => (
+              <option key={lang.code} value={lang.code}>{lang.name}</option>
+            ))}
           </select>
         </div>
-        <div>
-          <label htmlFor="voicePack" className="text-sm font-medium text-gray-300 mb-1 block">Voice Pack</label>
+
+        {/* Voice Selector */}
+        <div className="bg-black/20 p-3 rounded-lg border border-gray-700/30">
+          <label className="text-xs font-bold text-purple-400 uppercase mb-2 block tracking-wider">2. Select Voice Actor</label>
           <select 
-            id="voicePack" 
-            className="w-full bg-gray-800/50 border border-gray-600/50 p-3 rounded-lg text-sm focus:ring-sky-500 focus:border-sky-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gray-800 text-white p-2.5 rounded-md text-sm border border-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
             value={selectedVoiceURI || ''}
             onChange={(e) => onVoiceChange(e.target.value)}
-            disabled={isVoiceSelectionDisabled}
-            aria-label="Select a voice for dubbing"
+            disabled={areVoicesLoading}
           >
-            {renderVoiceOptions()}
+            {voiceOptions}
           </select>
         </div>
       </div>
       
       <button
-        onClick={handleButtonClick}
-        disabled={isStartButtonDisabled}
-        className="w-full font-bold py-3 px-5 rounded-full transition-all duration-300 ease-in-out text-white bg-gradient-to-r from-sky-500 to-indigo-600 hover:shadow-lg hover:shadow-sky-500/30 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+        onClick={isDubbingActive ? onStop : onStart}
+        disabled={!selectedVoiceURI}
+        className={`w-full font-bold py-3 px-5 rounded-xl transition-all duration-300 ease-in-out flex items-center justify-center gap-2
+          ${isDubbingActive 
+            ? 'bg-red-500/80 hover:bg-red-600 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]' 
+            : 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white hover:shadow-[0_0_20px_rgba(14,165,233,0.4)] hover:-translate-y-0.5'
+          } disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none`}
       >
-        {isDubbingActive ? 'Stop Dubbing' : 'Start Dubbing'}
+        {isDubbingActive ? (
+          <>⏹ Stop Dubbing</>
+        ) : (
+          <>▶ Start Dubbing</>
+        )}
       </button>
     </section>
   );
