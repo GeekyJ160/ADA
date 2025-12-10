@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { forwardRef } from 'react';
 import { DubbingStatus } from '../types';
 
 interface VideoPlayerProps {
@@ -18,11 +19,11 @@ const StatusIndicator: React.FC<{ status: DubbingStatus }> = ({ status }) => {
   return <span className={`${baseClasses} bg-red-500`} />;
 };
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ status, currentSubtitle }) => {
+const VideoPlayer = forwardRef<HTMLVideoElement, VideoPlayerProps>(({ status, currentSubtitle }, ref) => {
   const statusTextMap: Record<DubbingStatus, string> = {
     off: 'DUB OFF',
-    processing: 'Translating...',
-    live: 'DUB LIVE'
+    processing: 'Connecting...',
+    live: 'LIVE DUB'
   };
 
   return (
@@ -37,11 +38,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ status, currentSubtitle }) =>
       
       <div className="aspect-video bg-black rounded-lg mb-1 relative group overflow-hidden border border-gray-800">
         <video 
+          ref={ref}
           className="w-full h-full rounded-lg object-cover opacity-80" 
-          autoPlay 
-          muted 
+          muted={status === 'live'} // Auto-mute original audio when dubbing is live
           loop
           playsInline
+          crossOrigin="anonymous"
           src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4" 
         >
           Your browser does not support the video tag.
@@ -51,8 +53,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ status, currentSubtitle }) =>
         {status === 'processing' && (
           <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center z-20 backdrop-blur-sm transition-all duration-300">
             <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-            <p className="text-sky-400 font-semibold animate-pulse tracking-wide text-sm">TRANSLATING SCRIPT...</p>
-            <p className="text-xs text-gray-400 mt-1">Powered by Gemini AI</p>
+            <p className="text-sky-400 font-semibold animate-pulse tracking-wide text-sm">INITIALIZING AI...</p>
+            <p className="text-xs text-gray-400 mt-1">Connecting to Gemini Live</p>
           </div>
         )}
 
@@ -72,6 +74,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ status, currentSubtitle }) =>
       </div>
     </section>
   );
-};
+});
 
 export default VideoPlayer;

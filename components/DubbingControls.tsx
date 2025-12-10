@@ -1,16 +1,23 @@
 
-import React, { useMemo } from 'react';
+import React from 'react';
+import { InputMode } from '../types';
+
+interface VoiceOption {
+  id: string;
+  name: string;
+}
 
 interface DubbingControlsProps {
   onStart: () => void;
   onStop: () => void;
   isDubbingActive: boolean;
-  voices: SpeechSynthesisVoice[];
-  selectedVoiceURI: string | null;
-  onVoiceChange: (uri: string) => void;
+  voices: VoiceOption[];
+  selectedVoiceId: string;
+  onVoiceChange: (id: string) => void;
   targetLang: string;
   onTargetLangChange: (lang: string) => void;
-  areVoicesLoading: boolean;
+  inputMode: InputMode;
+  onInputModeChange: (mode: InputMode) => void;
 }
 
 const LANGUAGES = [
@@ -32,53 +39,49 @@ const DubbingControls: React.FC<DubbingControlsProps> = ({
   onStop,
   isDubbingActive,
   voices,
-  selectedVoiceURI,
+  selectedVoiceId,
   onVoiceChange,
   targetLang,
   onTargetLangChange,
-  areVoicesLoading,
+  inputMode,
+  onInputModeChange
 }) => {
-  
-  const voiceOptions = useMemo(() => {
-    if (areVoicesLoading) return <option disabled>Loading voices...</option>;
-    if (voices.length === 0) return <option disabled>No voices available</option>;
-    
-    const groupedVoices = voices.reduce((acc, voice) => {
-      const baseLang = voice.lang.split('-')[0];
-      if (!acc[baseLang]) acc[baseLang] = [];
-      acc[baseLang].push(voice);
-      return acc;
-    }, {} as Record<string, SpeechSynthesisVoice[]>);
-
-    const languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
-
-    return Object.keys(groupedVoices).sort().map(baseLang => {
-      let languageLabel = baseLang;
-      try {
-        const name = languageNames.of(baseLang);
-        if (name) languageLabel = name;
-      } catch (e) {}
-      
-      return (
-        <optgroup label={languageLabel} key={baseLang}>
-          {groupedVoices[baseLang].map(voice => (
-            <option key={voice.voiceURI} value={voice.voiceURI}>
-              {voice.name.replace('Google', '').replace('Microsoft', '').trim()} ({voice.lang})
-            </option>
-          ))}
-        </optgroup>
-      );
-    });
-  }, [voices, areVoicesLoading]);
-
   return (
     <section className="p-4 bg-[#1a1a2e] rounded-2xl border border-gray-700/50 space-y-4 shadow-lg">
       <h2 className="text-lg font-semibold text-sky-300 border-b border-gray-700/50 pb-2">🎚️ Dubbing Studio</h2>
       
+      {/* Mode Switcher */}
+      <div className="bg-black/30 p-1 rounded-lg flex space-x-1 border border-gray-700/50">
+        <button
+            onClick={() => onInputModeChange('script')}
+            disabled={isDubbingActive}
+            className={`flex-1 py-2 text-xs font-bold uppercase rounded-md transition-all ${
+                inputMode === 'script' 
+                ? 'bg-sky-600 text-white shadow-md' 
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+        >
+            📝 Script Dub
+        </button>
+        <button
+            onClick={() => onInputModeChange('video')}
+            disabled={isDubbingActive}
+            className={`flex-1 py-2 text-xs font-bold uppercase rounded-md transition-all ${
+                inputMode === 'video' 
+                ? 'bg-green-600 text-white shadow-md' 
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+        >
+            🎥 Live Video
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 gap-4">
          {/* Translation Selector */}
          <div className="bg-black/20 p-3 rounded-lg border border-gray-700/30">
-          <label className="text-xs font-bold text-sky-500 uppercase mb-2 block tracking-wider">1. Translate To</label>
+          <label className="text-xs font-bold text-sky-500 uppercase mb-2 block tracking-wider">
+            {inputMode === 'video' ? 'Translate Audio To' : 'Translate Script To'}
+          </label>
           <select 
             className="w-full bg-gray-800 text-white p-2.5 rounded-md text-sm border border-gray-600 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none"
             value={targetLang}
@@ -93,33 +96,44 @@ const DubbingControls: React.FC<DubbingControlsProps> = ({
 
         {/* Voice Selector */}
         <div className="bg-black/20 p-3 rounded-lg border border-gray-700/30">
-          <label className="text-xs font-bold text-purple-400 uppercase mb-2 block tracking-wider">2. Select Voice Actor</label>
+          <label className="text-xs font-bold text-purple-400 uppercase mb-2 block tracking-wider">Select Voice Actor (Gemini)</label>
           <select 
             className="w-full bg-gray-800 text-white p-2.5 rounded-md text-sm border border-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
-            value={selectedVoiceURI || ''}
+            value={selectedVoiceId}
             onChange={(e) => onVoiceChange(e.target.value)}
-            disabled={areVoicesLoading}
+            disabled={isDubbingActive}
           >
-            {voiceOptions}
+            {voices.map((voice) => (
+              <option key={voice.id} value={voice.id}>
+                {voice.name}
+              </option>
+            ))}
           </select>
         </div>
       </div>
       
       <button
         onClick={isDubbingActive ? onStop : onStart}
-        disabled={!selectedVoiceURI}
         className={`w-full font-bold py-3 px-5 rounded-xl transition-all duration-300 ease-in-out flex items-center justify-center gap-2
           ${isDubbingActive 
             ? 'bg-red-500/80 hover:bg-red-600 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]' 
-            : 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white hover:shadow-[0_0_20px_rgba(14,165,233,0.4)] hover:-translate-y-0.5'
-          } disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none`}
+            : inputMode === 'video' 
+                ? 'bg-gradient-to-r from-green-500 to-teal-600 text-white hover:shadow-[0_0_20px_rgba(34,197,94,0.4)]'
+                : 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white hover:shadow-[0_0_20px_rgba(14,165,233,0.4)]'
+          } hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none`}
       >
         {isDubbingActive ? (
           <>⏹ Stop Dubbing</>
         ) : (
-          <>▶ Start Dubbing</>
+          inputMode === 'video' ? <>🎙️ Start Live Translate</> : <>▶ Start Dubbing</>
         )}
       </button>
+      
+      {inputMode === 'video' && (
+          <p className="text-xs text-center text-gray-400 animate-pulse">
+            *Captures video audio & translates in real-time
+          </p>
+      )}
     </section>
   );
 };
