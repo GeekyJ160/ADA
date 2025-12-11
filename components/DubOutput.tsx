@@ -7,12 +7,24 @@ interface DubOutputProps {
   dubbedSegments: string[];
   isProcessing: boolean;
   activeAnalyser: AnalyserNode | null;
+  recordedUrl: string | null;
 }
 
-const DubOutput: React.FC<DubOutputProps> = ({ dubbedSegments, isProcessing, activeAnalyser }) => {
+const DubOutput: React.FC<DubOutputProps> = ({ dubbedSegments, isProcessing, activeAnalyser, recordedUrl }) => {
   return (
     <section className="p-4 bg-[#1a1a2e] rounded-2xl border border-gray-700/50">
-      <h2 className="text-lg font-semibold text-sky-300 border-b border-gray-700/50 pb-2 mb-3">🔄 Real-time Dubbing</h2>
+      <div className="flex justify-between items-center border-b border-gray-700/50 pb-2 mb-3">
+          <h2 className="text-lg font-semibold text-sky-300">🔄 Real-time Dubbing</h2>
+          {recordedUrl && (
+              <a 
+                href={recordedUrl} 
+                download="dubbed_video.webm"
+                className="text-xs bg-sky-600 hover:bg-sky-500 text-white font-bold py-1 px-3 rounded shadow-md transition-all flex items-center gap-1"
+              >
+                  💾 Download Video
+              </a>
+          )}
+      </div>
       
       {/* Visualizer Area */}
       <div className="bg-black/40 rounded-lg border border-gray-700/30 h-24 mb-3 overflow-hidden relative">

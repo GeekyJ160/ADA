@@ -9,7 +9,7 @@ interface ScriptInputProps {
 const ScriptInput: React.FC<ScriptInputProps> = ({ script, onScriptChange }) => {
   const handleSample = () => {
     onScriptChange(
-      "The hero stands on the edge of the cliff.\nThe wind howls around him.\n'I will never give up!', he shouts into the void."
+      "[SFX: Explosion]\nHero: I will never give up!\nVillain: Then you shall fall!\n[SFX: Laugh]\nVillain: Mwahahaha!"
     );
   };
 
@@ -46,7 +46,7 @@ const ScriptInput: React.FC<ScriptInputProps> = ({ script, onScriptChange }) => 
         </div>
       </div>
       <p className="text-xs text-gray-500 mt-2 italic">
-        Tip: Use new lines to separate subtitle segments.
+        Tip: Use <code>[SFX: Name]</code> to trigger sound effects.
       </p>
     </section>
   );

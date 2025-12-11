@@ -58,9 +58,9 @@ const VideoPlayer = forwardRef<HTMLVideoElement, VideoPlayerProps>(({ status, cu
           </div>
         )}
 
-        {/* Subtitle Overlay */}
-        <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] text-center transition-opacity duration-300 ${currentSubtitle && status !== 'processing' ? 'opacity-100' : 'opacity-0'}`}>
-          <span className="bg-black/80 text-white px-4 py-2 rounded-lg text-sm md:text-base font-medium shadow-lg backdrop-blur-sm leading-relaxed border border-white/10 box-decoration-clone">
+        {/* Subtitle Overlay - Prominent Style */}
+        <div className={`absolute bottom-10 left-1/2 -translate-x-1/2 w-[95%] text-center transition-opacity duration-300 ${currentSubtitle && status !== 'processing' ? 'opacity-100' : 'opacity-0'} pointer-events-none`}>
+          <span className="inline-block bg-black/60 text-sky-100 px-6 py-3 rounded-2xl text-lg md:text-xl font-bold shadow-[0_0_15px_rgba(0,0,0,0.5)] backdrop-blur-md leading-relaxed border border-sky-500/30 box-decoration-clone [text-shadow:0_2px_4px_rgba(0,0,0,0.8)]">
             {currentSubtitle}
           </span>
         </div>

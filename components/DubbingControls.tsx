@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { InputMode } from '../types';
+import { InputMode, Character, VoicePreset } from '../types';
 
 interface VoiceOption {
   id: string;
@@ -18,10 +17,16 @@ interface DubbingControlsProps {
   onTargetLangChange: (lang: string) => void;
   inputMode: InputMode;
   onInputModeChange: (mode: InputMode) => void;
+  onAutoDetect: () => void;
+  characters: Character[];
+  onAddCharacter: (char: Character) => void;
+  onRemoveCharacter: (id: string) => void;
+  presets: VoicePreset[];
 }
 
 const LANGUAGES = [
   { code: 'original', name: 'Original (No Translation)' },
+  { code: 'English', name: 'English 🇺🇸' },
   { code: 'Spanish', name: 'Spanish 🇪🇸' },
   { code: 'French', name: 'French 🇫🇷' },
   { code: 'Japanese', name: 'Japanese 🇯🇵' },
@@ -44,7 +49,12 @@ const DubbingControls: React.FC<DubbingControlsProps> = ({
   targetLang,
   onTargetLangChange,
   inputMode,
-  onInputModeChange
+  onInputModeChange,
+  onAutoDetect,
+  characters,
+  onAddCharacter,
+  onRemoveCharacter,
+  presets
 }) => {
   return (
     <section className="p-4 bg-[#1a1a2e] rounded-2xl border border-gray-700/50 space-y-4 shadow-lg">
@@ -78,10 +88,20 @@ const DubbingControls: React.FC<DubbingControlsProps> = ({
 
       <div className="grid grid-cols-1 gap-4">
          {/* Translation Selector */}
-         <div className="bg-black/20 p-3 rounded-lg border border-gray-700/30">
-          <label className="text-xs font-bold text-sky-500 uppercase mb-2 block tracking-wider">
-            {inputMode === 'video' ? 'Translate Audio To' : 'Translate Script To'}
-          </label>
+         <div className="bg-black/20 p-3 rounded-lg border border-gray-700/30 relative">
+          <div className="flex justify-between items-center mb-2">
+              <label className="text-xs font-bold text-sky-500 uppercase tracking-wider">
+                {inputMode === 'video' ? 'Translate Audio To' : 'Translate Script To'}
+              </label>
+              <button 
+                onClick={onAutoDetect}
+                disabled={isDubbingActive}
+                className="text-[10px] bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 px-2 py-1 rounded border border-sky-500/30 transition-all flex items-center gap-1"
+                title="Auto-detect source language and set target"
+              >
+                ✨ Auto-Detect
+              </button>
+          </div>
           <select 
             className="w-full bg-gray-800 text-white p-2.5 rounded-md text-sm border border-gray-600 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none"
             value={targetLang}
